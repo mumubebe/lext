@@ -20,6 +20,7 @@ or
 ...     inject=b"&waffle=liege",
 ...     signature="6d5f807e23db210bc254a28be2d6759a0f5f5d99",
 ...     secret_length=14,
+...     method="sha1"
 ... )
 >>> print(sig)
 0e41270260895979317fff3898ab85668953aaa2
