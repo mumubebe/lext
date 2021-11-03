@@ -7,14 +7,16 @@ def rotl(num, bits):
 
 
 class sha1:
+    hx = [
+        0x67452301,
+        0xEFCDAB89,
+        0x98BADCFE,
+        0x10325476,
+        0xC3D2E1F0,
+    ]
+
     def __init__(self):
-        self.h0, self.h1, self.h2, self.h3, self.h4 = (
-            0x67452301,
-            0xEFCDAB89,
-            0x98BADCFE,
-            0x10325476,
-            0xC3D2E1F0,
-        )
+        self.h = self.hx[:]
         self._extra_length = 0
         self._message = b""
 
@@ -28,16 +30,16 @@ class sha1:
 
     @property
     def init_values(self):
-        return (self.h0, self.h1, self.h2, self.h3, self.h4)
+        return self.h
 
     @init_values.setter
     def init_values(self, value):
-        self.h0, self.h1, self.h2, self.h3, self.h4 = self.reverse_hash(value)
+        self.h = self.reverse_hash(value)
 
     def add(self, message):
         self._message = message
 
-    def _produce(self, message, h0, h1, h2, h3, h4):
+    def _produce(self, message, h):
         message = self.pad(self._message, self._extra_length)
 
         blocks = [message[i * 64 : i * 64 + 64] for i in range(len(message) // 64)]
@@ -48,7 +50,7 @@ class sha1:
             for i in range(16, 80):
                 w.append(rotl(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1))
 
-            a, b, c, d, e = h0, h1, h2, h3, h4
+            a, b, c, d, e = h[0], h[1], h[2], h[3], h[4]
 
             for i in range(80):
                 if 0 <= i <= 19:
@@ -71,20 +73,16 @@ class sha1:
                 b = a
                 a = temp
 
-            h0 = (h0 + a) & 0xFFFFFFFF
-            h1 = (h1 + b) & 0xFFFFFFFF
-            h2 = (h2 + c) & 0xFFFFFFFF
-            h3 = (h3 + d) & 0xFFFFFFFF
-            h4 = (h4 + e) & 0xFFFFFFFF
+            h[0] = (h[0] + a) & 0xFFFFFFFF
+            h[1] = (h[1] + b) & 0xFFFFFFFF
+            h[2] = (h[2] + c) & 0xFFFFFFFF
+            h[3] = (h[3] + d) & 0xFFFFFFFF
+            h[4] = (h[4] + e) & 0xFFFFFFFF
 
-        return h0 << 128 | h1 << 96 | h2 << 64 | h3 << 32 | h4
+        return h[0] << 128 | h[1] << 96 | h[2] << 64 | h[3] << 32 | h[4]
 
     def hex_digest(self):
-        return (
-            self._produce(self._message, self.h0, self.h1, self.h2, self.h3, self.h4)
-            .to_bytes(20, byteorder="big")
-            .hex()
-        )
+        return self._produce(self._message, self.h).to_bytes(20, byteorder="big").hex()
 
     @staticmethod
     def pad(message, extra_length=0):
@@ -110,4 +108,11 @@ class sha1:
         c = (hsh >> 64) & 0xFFFFFFFF
         d = (hsh >> 32) & 0xFFFFFFFF
         e = hsh & 0xFFFFFFFF
-        return a, b, c, d, e
+        return [a, b, c, d, e]
+
+
+class sha2:
+    def __init__(self):
+        pass
+
+
