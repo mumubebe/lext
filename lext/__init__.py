@@ -1,7 +1,9 @@
 from . import hashfuncs
 
 
-def lext(data, signature, inject, secret_length, method="sha1"):
+def lext(
+    data: bytes, signature: str, inject: bytes, secret_length: int, method: str = "sha1"
+) -> tuple:
     if method == "sha1":
         d = hashfuncs.sha1.pad(data, secret_length)
 

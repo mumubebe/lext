@@ -1,7 +1,7 @@
 import argparse
 from . import lext
 
-choices=['sha1']
+choices = ["sha1"]
 
 parser = argparse.ArgumentParser(description="Length Extension Attack-tool")
 parser.add_argument(
