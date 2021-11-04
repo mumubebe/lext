@@ -46,7 +46,7 @@ Length Extension Attack-tool
 
 optional arguments:
   -h, --help            show this help message and exit
-  -m {sha1,sha256}, --method {sha1,sha256}
+  -m {sha1,sha256, sha224}, --method {sha1,sha256, sha224}
                         Hash method
   -d DATA, --data DATA  The original data known message from server. This data is prepend with a hidden secret unknown to client.
   -i INJECT, --inject INJECT
