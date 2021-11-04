@@ -1,7 +1,7 @@
 import argparse
 from . import lext
 
-choices = ["sha1"]
+choices = ["sha1", "sha256"]
 
 parser = argparse.ArgumentParser(description="Length Extension Attack-tool")
 parser.add_argument(
@@ -41,10 +41,29 @@ parser.add_argument(
     required=True,
 )
 
+parser.add_argument(
+    "--ignore_signature",
+    help="Ignore output return of signature",
+)
+
+parser.add_argument(
+    "--ignore_outputdata",
+    help="Ignore output return of new data message",
+)
+
 args = parser.parse_args()
 args.data = args.data.encode("utf_8")
 args.inject = args.inject.encode("utf_8")
 
-data, sig = lext(**vars(args))
-print("Byte data: ", data)
-print("Signature: ", sig)
+data, sig = lext(
+    data=args.data,
+    signature=args.signature,
+    inject=args.inject,
+    secret_length=args.secret_length,
+    method=args.method,
+)
+
+if not args.ignore_outputdata:
+    print(data)
+if not args.ignore_signature:
+    print(sig)
