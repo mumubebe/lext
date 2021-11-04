@@ -130,17 +130,6 @@ class sha1(LengthExtender):
 
 
 class sha2(LengthExtender):
-    hx = [
-        0x6A09E667,
-        0xBB67AE85,
-        0x3C6EF372,
-        0xA54FF53A,
-        0x510E527F,
-        0x9B05688C,
-        0x1F83D9AB,
-        0x5BE0CD19,
-    ]
-
     kx = [
         0x428A2F98,
         0x71374491,
@@ -277,12 +266,38 @@ class sha2(LengthExtender):
     def digest(self):
         return b"".join(x.to_bytes(4, "big") for x in self._produce())
 
+class sha256(sha2):
+    hx = [
+        0x6A09E667,
+        0xBB67AE85,
+        0x3C6EF372,
+        0xA54FF53A,
+        0x510E527F,
+        0x9B05688C,
+        0x1F83D9AB,
+        0x5BE0CD19,
+    ]
+
+class sha224(sha2):
+    hx = [
+        0xC1059ED8,
+        0x367CD507,
+        0x3070DD17,
+        0xF70E5939,
+        0xFFC00B31,
+        0x68581511,
+        0x64F98FA7,
+        0xBEFA4FA4,
+    ]
+
 
 def get_cls(kls):
     """Return hash class"""
     if kls == "sha1":
         return sha1
     elif kls == "sha256":
-        return sha2
+        return sha256
+    elif kls == "sha224":
+        return sha224
     else:
         raise Exception("Could not find hash method name ", kls)
