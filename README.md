@@ -1,7 +1,7 @@
 # lext
 Length Extension Attack-tool
 
-SHA1, SHA256
+SHA1, SHA256, SHA224
 
 
 ```console
