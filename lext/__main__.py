@@ -42,12 +42,16 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--ignore_signature",
+    "--no-signature",
+    dest="no_signature",
+    action="store_true",
     help="Ignore output return of signature",
 )
 
 parser.add_argument(
-    "--ignore_outputdata",
+    "--no-outputdata",
+    dest="no_outputdata", 
+    action="store_true",
     help="Ignore output return of new data message",
 )
 
@@ -63,7 +67,7 @@ data, sig = lext(
     method=args.method,
 )
 
-if not args.ignore_outputdata:
+if not args.no_outputdata:
     print(data)
-if not args.ignore_signature:
+if not args.no_signature:
     print(sig)
