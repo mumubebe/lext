@@ -1,7 +1,7 @@
 # lext
 Length Extension Attack-tool
 
-SHA1, SHA256, SHA224
+SHA1, SHA256, SHA224, MD5
 
 
 ```console
@@ -47,7 +47,7 @@ Length Extension Attack-tool
 
 optional arguments:
   -h, --help            show this help message and exit
-  -m {sha1,sha256,sha224}, --method {sha1,sha256,sha224}
+  -m {sha1,sha256,sha224, md5}, --method {sha1,sha256,sha224, md5}
                         Hash method
   -d DATA, --data DATA  The original data known message from server. This data is prepend with a hidden secret
                         unknown to client.

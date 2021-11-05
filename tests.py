@@ -70,5 +70,22 @@ class TestSHA224(unittest.TestCase):
                 self.assertEqual(hashfuncs.get("sha224").hexdigest(data), hash)
 
 
+class TestMD5(unittest.TestCase):
+    h = [
+        (b"", "d41d8cd98f00b204e9800998ecf8427e"),
+        (b"a", "0cc175b9c0f1b6a831c399e269772661"),
+        (
+            b"The quick brown fox jumps over the lazy dog",
+            "9e107d9d372bb6826bd81d3542a419d6",
+        ),
+    ]
+
+    def test_hexdigest(self):
+        """Test MD5 hexdigest"""
+        for data, hash in self.h:
+            with self.subTest(data=data):
+                self.assertEqual(hashfuncs.get("md5").hexdigest(data), hash)
+
+
 if __name__ == "__main__":
     unittest.main()

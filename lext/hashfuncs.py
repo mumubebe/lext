@@ -1,4 +1,5 @@
 import struct
+from . import constants
 
 
 def rotl(num, shift):
@@ -10,8 +11,24 @@ def rotr(num, shift):
     """Rotate right"""
     return ((num >> shift) | (num << (32 - shift))) & 0xFFFFFFFF
 
+def pad2(msg):
+	msg_len_in_bits = (8*len(msg)) & 0xffffffffffffffff
+	msg.append(0x80)
 
-def pad(data, extra_length=0):
+	while len(msg)%64 != 56:
+		msg.append(0)
+
+# STEP 2: append a 64-bit version of the length of the length of the original message
+# in the unlikely event that the length of the message is greater than 2^64,
+# only the lower order 64 bits of the length are used.
+
+# sys.byteorder -> 'little'
+	msg += msg_len_in_bits.to_bytes(8, byteorder='little') # little endian convention
+	# to_bytes(8...) will return the lower order 64 bits(8 bytes) of the length.
+	
+	return msg
+
+def pad(data, extra_length=0, byteorder="big"):
     """Pad message, with the ability to forge"""
     ml = len(data) + extra_length
 
@@ -21,9 +38,9 @@ def pad(data, extra_length=0):
 
     return (
         data
-        + bytes([0x80])
-        + (0x00).to_bytes(padlen, byteorder="big")
-        + (ml_bits).to_bytes(8, byteorder="big")
+        + (0x80).to_bytes(1, byteorder=byteorder)
+        + (0x00).to_bytes(padlen, byteorder=byteorder)
+        + (ml_bits).to_bytes(8, byteorder=byteorder)
     )
 
 
@@ -54,16 +71,8 @@ class LengthExtender:
 class sha1(LengthExtender):
     """SHA1"""
 
-    hx = [
-        0x67452301,
-        0xEFCDAB89,
-        0x98BADCFE,
-        0x10325476,
-        0xC3D2E1F0,
-    ]
-
     def __init__(self):
-        self._h = self.hx[:]
+        self._h = constants.SHA1_H
         self._extra_length = 0
 
     def _produce(self, data):
@@ -126,76 +135,8 @@ class sha1(LengthExtender):
 
 
 class sha2(LengthExtender):
-    kx = [
-        0x428A2F98,
-        0x71374491,
-        0xB5C0FBCF,
-        0xE9B5DBA5,
-        0x3956C25B,
-        0x59F111F1,
-        0x923F82A4,
-        0xAB1C5ED5,
-        0xD807AA98,
-        0x12835B01,
-        0x243185BE,
-        0x550C7DC3,
-        0x72BE5D74,
-        0x80DEB1FE,
-        0x9BDC06A7,
-        0xC19BF174,
-        0xE49B69C1,
-        0xEFBE4786,
-        0x0FC19DC6,
-        0x240CA1CC,
-        0x2DE92C6F,
-        0x4A7484AA,
-        0x5CB0A9DC,
-        0x76F988DA,
-        0x983E5152,
-        0xA831C66D,
-        0xB00327C8,
-        0xBF597FC7,
-        0xC6E00BF3,
-        0xD5A79147,
-        0x06CA6351,
-        0x14292967,
-        0x27B70A85,
-        0x2E1B2138,
-        0x4D2C6DFC,
-        0x53380D13,
-        0x650A7354,
-        0x766A0ABB,
-        0x81C2C92E,
-        0x92722C85,
-        0xA2BFE8A1,
-        0xA81A664B,
-        0xC24B8B70,
-        0xC76C51A3,
-        0xD192E819,
-        0xD6990624,
-        0xF40E3585,
-        0x106AA070,
-        0x19A4C116,
-        0x1E376C08,
-        0x2748774C,
-        0x34B0BCB5,
-        0x391C0CB3,
-        0x4ED8AA4A,
-        0x5B9CCA4F,
-        0x682E6FF3,
-        0x748F82EE,
-        0x78A5636F,
-        0x84C87814,
-        0x8CC70208,
-        0x90BEFFFA,
-        0xA4506CEB,
-        0xBEF9A3F7,
-        0xC67178F2,
-    ]
-
     def __init__(self):
-        self.k = self.kx[:]
-        self._h = self.hx[:]
+        self.k = constants.SHA2_K
         self._extra_length = 0
 
     def _produce(self, data):
@@ -263,29 +204,11 @@ class sha2(LengthExtender):
 
 
 class sha256(sha2):
-    hx = [
-        0x6A09E667,
-        0xBB67AE85,
-        0x3C6EF372,
-        0xA54FF53A,
-        0x510E527F,
-        0x9B05688C,
-        0x1F83D9AB,
-        0x5BE0CD19,
-    ]
+    _h = constants.SHA256_H
 
 
 class sha224(sha2):
-    hx = [
-        0xC1059ED8,
-        0x367CD507,
-        0x3070DD17,
-        0xF70E5939,
-        0xFFC00B31,
-        0x68581511,
-        0x64F98FA7,
-        0xBEFA4FA4,
-    ]
+    _h = constants.SHA224_H
 
     def digest(self, data: bytes) -> bytes:
         """Return SHA224-format
@@ -294,10 +217,72 @@ class sha224(sha2):
         return b"".join(x.to_bytes(4, "big") for x in self._produce(data)[:-1])
 
 
-hashclasses = {"sha1": sha1, "sha256": sha256, "sha224": sha224}
+class md5(LengthExtender):
+    """MD5"""
+
+    k = constants.MD5_K
+    s = constants.MD5_S
+
+    def __init__(self):
+        self.a0 = 0x67452301
+        self.b0 = 0xEFCDAB89
+        self.c0 = 0x98BADCFE
+        self.d0 = 0x10325476
+        self._extra_length = 0
+
+    def _produce(self, data):
+        a0, b0, c0, d0 = self.a0, self.b0, self.c0, self.d0
+        k = self.k
+        s = self.s
+        data = pad(data, self._extra_length, byteorder="little")
+
+        blocks = [data[i * 64 : i * 64 + 64] for i in range(len(data) // 64)]
+        for block in blocks:
+            m = [struct.unpack(b"<I", block[i * 4 : i * 4 + 4])[0] for i in range(16)]
+            a = a0
+            b = b0
+            c = c0
+            d = d0
+
+            for i in range(64):
+                if 0 <= i <= 15:
+                    f = (b & c) | (~b & d)
+                    g = i
+                elif 16 <= i <= 31:
+                    f = (d & b) | (~d & c)
+                    g = ((5 * i + 1) % 16) & 0xFFFFFFFF
+                elif 32 <= i <= 47:
+                    f = b ^ c ^ d
+                    g = ((3 * i + 5) % 16) & 0xFFFFFFFF
+                elif 48 <= i <= 63:
+                    f = c ^ (b | ~d)
+                    g = ((7 * i) % 16) & 0xFFFFFFFF
+
+                f = (f + a + k[i] + m[g]) & 0xFFFFFFFF
+                a = d
+                d = c
+                c = b
+                b = b + rotl(f, s[i])
+
+        return [
+            (a0 + a) & 0xFFFFFFFF,
+            (b0 + b) & 0xFFFFFFFF,
+            (c0 + c) & 0xFFFFFFFF,
+            (d0 + d) & 0xFFFFFFFF,
+        ]
+
+    def digest(self, data):
+        return b"".join(x.to_bytes(4, "little") for x in self._produce(data))
+
+    def hexdigest(self, data):
+        return self.digest(data).hex()
+
+
+hashclasses = {"sha1": sha1, "sha256": sha256, "sha224": sha224, "md5": md5}
 
 
 def get(kls: str) -> object:
+    kls = kls.lower()
     """Return hash class"""
     if kls in hashclasses:
         return hashclasses[kls]()
