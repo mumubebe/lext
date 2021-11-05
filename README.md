@@ -1,7 +1,7 @@
 # lext
 Length Extension Attack-tool
 
-SHA1, SHA256
+SHA1, SHA256, SHA224
 
 
 ```console
@@ -16,6 +16,7 @@ $ python3 -m lext \
 >     --inject '&waffle=liege' \
 >     --signature '6d5f807e23db210bc254a28be2d6759a0f5f5d99' \
 >     --secret_length 14 \
+>     --method 'sha1'
 > 
 b'count=10&lat=37.351&user_id=1&long=-119.827&waffle=eggo\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02(&waffle=liege'
 0e41270260895979317fff3898ab85668953aaa2
@@ -46,7 +47,11 @@ Length Extension Attack-tool
 
 optional arguments:
   -h, --help            show this help message and exit
+<<<<<<< HEAD
   -m {sha1,sha256,sha224}, --method {sha1,sha256,sha224}
+=======
+  -m {sha1,sha256, sha224}, --method {sha1,sha256, sha224}
+>>>>>>> 270e3d04b3d192f360ae46d0013fc012832aa7a2
                         Hash method
   -d DATA, --data DATA  The original data known message from server. This data is prepend with a hidden secret
                         unknown to client.
