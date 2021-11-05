@@ -47,11 +47,7 @@ Length Extension Attack-tool
 
 optional arguments:
   -h, --help            show this help message and exit
-<<<<<<< HEAD
   -m {sha1,sha256,sha224}, --method {sha1,sha256,sha224}
-=======
-  -m {sha1,sha256, sha224}, --method {sha1,sha256, sha224}
->>>>>>> 270e3d04b3d192f360ae46d0013fc012832aa7a2
                         Hash method
   -d DATA, --data DATA  The original data known message from server. This data is prepend with a hidden secret
                         unknown to client.
