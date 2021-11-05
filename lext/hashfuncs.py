@@ -50,9 +50,6 @@ class LengthExtender:
         """Set init values (h) based on a hash-value"""
         self._h = self._reverse_hash(value)
 
-    def add(self, data):
-        self._data = data
-
 
 class sha1(LengthExtender):
     """SHA1"""
@@ -68,11 +65,10 @@ class sha1(LengthExtender):
     def __init__(self):
         self._h = self.hx[:]
         self._extra_length = 0
-        self._data = b""
 
-    def _produce(self):
+    def _produce(self, data):
         h = self._h[:]
-        data = pad(self._data, self._extra_length)
+        data = pad(data, self._extra_length)
 
         blocks = [data[i * 64 : i * 64 + 64] for i in range(len(data) // 64)]
 
@@ -113,11 +109,11 @@ class sha1(LengthExtender):
 
         return h[0] << 128 | h[1] << 96 | h[2] << 64 | h[3] << 32 | h[4]
 
-    def digest(self):
-        return self._produce().to_bytes(20, byteorder="big")
+    def digest(self, data: bytes) -> str:
+        return self._produce(data).to_bytes(20, byteorder="big")
 
-    def hexdigest(self):
-        return self.digest().hex()
+    def hexdigest(self, data: bytes) -> bytes:
+        return self.digest(data).hex()
 
     def _reverse_hash(self, hsh):
         hsh = int(hsh, 16)
@@ -201,12 +197,11 @@ class sha2(LengthExtender):
         self.k = self.kx[:]
         self._h = self.hx[:]
         self._extra_length = 0
-        self._data = b""
 
-    def _produce(self):
+    def _produce(self, data):
         _h = self._h[:]
         _k = self.k[:]
-        data = pad(self._data, self._extra_length)
+        data = pad(data, self._extra_length)
 
         blocks = [data[i * 64 : i * 64 + 64] for i in range(len(data) // 64)]
         for block in blocks:
@@ -245,7 +240,6 @@ class sha2(LengthExtender):
             _h[6] = (_h[6] + g) & 0xFFFFFFFF
             _h[7] = (_h[7] + h) & 0xFFFFFFFF
 
-        self._h = _h
         return _h
 
     def _reverse_hash(self, hsh):
@@ -260,11 +254,13 @@ class sha2(LengthExtender):
         h7 = hsh & 0xFFFFFFFF
         return [h0, h1, h2, h3, h4, h5, h6, h7]
 
-    def hexdigest(self):
-        return self.digest().hex()
+    def hexdigest(self, data: bytes) -> str:
+        return self.digest(data).hex()
 
-    def digest(self):
-        return b"".join(x.to_bytes(4, "big") for x in self._produce())
+    def digest(self, data: bytes) -> bytes:
+        """Return SHA256-format"""
+        return b"".join(x.to_bytes(4, "big") for x in self._produce(data))
+
 
 class sha256(sha2):
     hx = [
@@ -278,6 +274,7 @@ class sha256(sha2):
         0x5BE0CD19,
     ]
 
+
 class sha224(sha2):
     hx = [
         0xC1059ED8,
@@ -290,14 +287,19 @@ class sha224(sha2):
         0xBEFA4FA4,
     ]
 
+    def digest(self, data: bytes) -> bytes:
+        """Return SHA224-format
+        The return value is identical to SHA-256, except that the output is constructed by omitting h7
+        """
+        return b"".join(x.to_bytes(4, "big") for x in self._produce(data)[:-1])
 
-def get_cls(kls):
+
+hashclasses = {"sha1": sha1, "sha256": sha256, "sha224": sha224}
+
+
+def get(kls: str) -> object:
     """Return hash class"""
-    if kls == "sha1":
-        return sha1
-    elif kls == "sha256":
-        return sha256
-    elif kls == "sha224":
-        return sha224
+    if kls in hashclasses:
+        return hashclasses[kls]()
     else:
         raise Exception("Could not find hash method name ", kls)
