@@ -9,11 +9,14 @@ def lext(
 
     # Get hash class
     hashcls = new(method)
+
     # Forge new input data message
-    d = pad(data, secret_length)
+    d = pad(data, secret_length, byteorder=hashcls.byteorder)
 
     # Setup and calculate a new signature
-    hashcls.extra_length = math.ceil((len(data) + secret_length) / 64) * 64
-    hashcls.init_values = signature
+    extra_length = math.ceil((len(data) + secret_length) / 64) * 64
 
-    return ((d + inject), hashcls.hexdigest(inject))
+    return (
+        (d + inject),
+        hashcls.hexdigest(inject, init_values=signature, extra_length=extra_length),
+    )

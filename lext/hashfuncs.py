@@ -28,40 +28,22 @@ def pad(data, extra_length=0, byteorder="big"):
     )
 
 
-class LengthExtender:
-    """Methods for SHA-classes"""
-
-    @property
-    def extra_length(self):
-        return self._extra_length
-
-    @extra_length.setter
-    def extra_length(self, value):
-        """Appends extra length to data. Using this to forge a padded message.
-        (Last byte in pad is the total length of data)
-        """
-        self._extra_length = value
-
-    @property
-    def init_values(self):
-        return self._h
-
-    @init_values.setter
-    def init_values(self, value):
-        """Set init values (h) based on a hash-value"""
-        self._h = self._reverse_hash(value)
-
-
-class sha1(LengthExtender):
+class sha1:
     """SHA1"""
+
+    byteorder = "big"
 
     def __init__(self):
         self._h = constants.SHA1_H
         self._extra_length = 0
 
-    def _produce(self, data):
-        h = self._h[:]
-        data = pad(data, self._extra_length)
+    def _produce(self, data, init_values=None, extra_length=0):
+        if init_values:
+            h = self._reverse_hash(init_values)
+        else:
+            h = self._h[:]
+
+        data = pad(data, extra_length)
 
         blocks = [data[i * 64 : i * 64 + 64] for i in range(len(data) // 64)]
         for block in blocks:
@@ -101,13 +83,29 @@ class sha1(LengthExtender):
 
         return h[0] << 128 | h[1] << 96 | h[2] << 64 | h[3] << 32 | h[4]
 
-    def digest(self, data: bytes) -> bytes:
-        """Digest and return bytes hash value"""
-        return self._produce(data).to_bytes(20, byteorder="big")
+    def digest(
+        self, data: bytes, init_values: str = None, extra_length: int = 0
+    ) -> bytes:
+        """Digest and return hex hash value
+        Parameters:
+            data:
+                Bytes data to hash
+            init_values (optional):
+                Set starting values for hash method. In length extension attacks this value is
+                the known signature.
+            extra_length (optional):
+                append extra length to message. This length is appended to pad calculation.
 
-    def hexdigest(self, data: bytes) -> str:
+        Return:
+            hashed value in hex
+        """
+        return self._produce(data, init_values, extra_length).to_bytes(
+            20, byteorder=self.byteorder
+        )
+
+    def hexdigest(self, data: bytes, **kwargs) -> str:
         """Digest and return hex hash value"""
-        return self.digest(data).hex()
+        return self.digest(data, **kwargs).hex()
 
     def _reverse_hash(self, hsh):
         hsh = int(hsh, 16)
@@ -119,15 +117,22 @@ class sha1(LengthExtender):
         return [a, b, c, d, e]
 
 
-class sha2(LengthExtender):
+class sha256:
+    byteorder = "big"
+
     def __init__(self):
         self.k = constants.SHA2_K
+        self._h = constants.SHA256_H
         self._extra_length = 0
 
-    def _produce(self, data):
-        _h = self._h[:]
+    def _produce(self, data, init_values=None, extra_length=0):
+        if init_values:
+            _h = self._reverse_hash(init_values)
+        else:
+            _h = init_values or self._h[:]
+
         _k = self.k[:]
-        data = pad(data, self._extra_length)
+        data = pad(data, extra_length)
 
         blocks = [data[i * 64 : i * 64 + 64] for i in range(len(data) // 64)]
         for block in blocks:
@@ -180,34 +185,45 @@ class sha2(LengthExtender):
         h7 = hsh & 0xFFFFFFFF
         return [h0, h1, h2, h3, h4, h5, h6, h7]
 
-    def hexdigest(self, data: bytes) -> str:
-        """Digest and return hex hash value"""
-        return self.digest(data).hex()
+    def hexdigest(self, data: bytes, **kwargs) -> str:
+        """Digest and return hex hash value. This methods calls digest()
+        Parameters:
+            data:
+                Bytes data to hash
+            **kwargs
 
-    def digest(self, data: bytes) -> bytes:
-        """Digest and return bytes hash value"""
-        return b"".join(x.to_bytes(4, "big") for x in self._produce(data))
-
-
-class sha256(sha2):
-    _h = constants.SHA256_H
-
-
-class sha224(sha2):
-    _h = constants.SHA224_H
-
-    def digest(self, data: bytes) -> bytes:
-        """Digest and return bytes hash value
-        The return value is identical to SHA-256, except that the output is constructed by omitting h7
+        Return:
+            hashed value in hex
         """
-        return b"".join(x.to_bytes(4, "big") for x in self._produce(data)[:-1])
+        return self.digest(data, **kwargs).hex()
+
+    def digest(
+        self, data: bytes, init_values: str = None, extra_length: int = 0
+    ) -> bytes:
+        """Digest and return hex hash value
+        Parameters:
+            data:
+                Bytes data to hash
+            init_values (optional):
+                Set starting values for hash method. In length extension attacks this value is
+                the known signature.
+            extra_length (optional):
+                append extra length to message. This length is appended to pad calculation.
+
+        Return:
+            hashed value in bytes
+        """
+        return b"".join(
+            x.to_bytes(4, "big") for x in self._produce(data, init_values, extra_length)
+        )
 
 
-class md5(LengthExtender):
+class md5:
     """MD5"""
 
     k = constants.MD5_K
     s = constants.MD5_S
+    byteorder = "little"
 
     def __init__(self):
         self.a0 = 0x67452301
@@ -216,11 +232,14 @@ class md5(LengthExtender):
         self.d0 = 0x10325476
         self._extra_length = 0
 
-    def _produce(self, data):
-        a0, b0, c0, d0 = self.a0, self.b0, self.c0, self.d0
+    def _produce(self, data, init_values=None, extra_length=0):
+        if init_values:
+            a0, b0, c0, d0 = self._reverse_hash(init_values)
+        else:
+            a0, b0, c0, d0 = self.a0, self.b0, self.c0, self.d0
         k = self.k
         s = self.s
-        data = pad(data, self._extra_length, byteorder="little")
+        data = pad(data, extra_length, byteorder=self.byteorder)
 
         blocks = [data[i * 64 : i * 64 + 64] for i in range(len(data) // 64)]
 
@@ -258,16 +277,53 @@ class md5(LengthExtender):
 
         return [a0, b0, c0, d0]
 
-    def digest(self, data):
-        """Digest and return bytes hash value"""
-        return b"".join(x.to_bytes(4, "little") for x in self._produce(data))
+    def _reverse_hash(self, hsh):
+        hsh = int.from_bytes(bytes.fromhex(hsh), byteorder=self.byteorder)
 
-    def hexdigest(self, data):
-        """Digest and return hex hash value"""
-        return self.digest(data).hex()
+        d0 = (hsh >> 96) & 0xFFFFFFFF
+        c0 = (hsh >> 64) & 0xFFFFFFFF
+        b0 = (hsh >> 32) & 0xFFFFFFFF
+        a0 = hsh & 0xFFFFFFFF
+
+        return [a0, b0, c0, d0]
+
+    def digest(
+        self, data: bytes, init_values: str = None, extra_length: int = 0
+    ) -> bytes:
+        """Digest and return hex hash value
+        Parameters:
+            data:
+                Bytes data to hash
+            init_values (optional):
+                Set starting values for hash method. In length extension attacks this value is
+                the known signature.
+            extra_length (optional):
+                append extra length to message. This length is appended to pad calculation.
+
+        Return:
+            hashed value in bytes
+        """
+        return b"".join(
+            x.to_bytes(4, self.byteorder)
+            for x in self._produce(
+                data, extra_length=extra_length, init_values=init_values
+            )
+        )
+
+    def hexdigest(self, data: bytes, **kwargs) -> str:
+        """Digest and return hex hash value. This methods calls digest()
+        Parameters:
+            data:
+                Bytes data to hash
+            **kwargs
+
+        Return:
+            hashed value in hex
+        """
+        return self.digest(data, **kwargs).hex()
 
 
-hashclasses = {"sha1": sha1, "sha256": sha256, "sha224": sha224, "md5": md5}
+hashclasses = {"sha1": sha1, "sha256": sha256, "md5": md5}
 
 
 def new(kls: str) -> object:
