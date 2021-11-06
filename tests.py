@@ -64,7 +64,7 @@ class TestMD5(unittest.TestCase):
     def test_hexdigest(self):
         """Test MD5 hexdigest against hashlib as reference"""
         for _ in range(10):
-            data = os.urandom(randint(56,56))
+            data = os.urandom(randint(0,9999))
             ref = hashlib.md5()
             ref.update(data)
             ref_sig = ref.hexdigest()
