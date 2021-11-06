@@ -31,7 +31,7 @@ class TestSHA1(unittest.TestCase):
             ref_sig = ref.hexdigest()
 
             with self.subTest(data=data):
-                self.assertEqual(hashfuncs.get("sha1").hexdigest(data), ref_sig)
+                self.assertEqual(hashfuncs.new("sha1").hexdigest(data), ref_sig)
 
 
 class TestSHA256(unittest.TestCase):
@@ -44,7 +44,7 @@ class TestSHA256(unittest.TestCase):
             ref_sig = ref.hexdigest()
 
             with self.subTest(data=data):
-                self.assertEqual(hashfuncs.get("sha256").hexdigest(data), ref_sig)
+                self.assertEqual(hashfuncs.new("sha256").hexdigest(data), ref_sig)
 
 
 class TestSHA224(unittest.TestCase):
@@ -57,7 +57,7 @@ class TestSHA224(unittest.TestCase):
             ref_sig = ref.hexdigest()
 
             with self.subTest(data=data):
-                self.assertEqual(hashfuncs.get("sha224").hexdigest(data), ref_sig)
+                self.assertEqual(hashfuncs.new("sha224").hexdigest(data), ref_sig)
 
 
 class TestMD5(unittest.TestCase):
@@ -70,7 +70,7 @@ class TestMD5(unittest.TestCase):
             ref_sig = ref.hexdigest()
 
             with self.subTest(data=data):
-                self.assertEqual(hashfuncs.get("md5").hexdigest(data), ref_sig)
+                self.assertEqual(hashfuncs.new("md5").hexdigest(data), ref_sig)
 
 
 if __name__ == "__main__":

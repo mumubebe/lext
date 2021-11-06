@@ -270,9 +270,10 @@ class md5(LengthExtender):
 hashclasses = {"sha1": sha1, "sha256": sha256, "sha224": sha224, "md5": md5}
 
 
-def get(kls: str) -> object:
+def new(kls: str) -> object:
+    """Return a new hash object"""
     kls = kls.lower()
-    """Return hash object"""
+
     if kls in hashclasses:
         return hashclasses[kls]()
     else:

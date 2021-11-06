@@ -1,4 +1,4 @@
-from .hashfuncs import get, pad
+from .hashfuncs import new, pad
 import math
 
 
@@ -8,7 +8,7 @@ def lext(
     """Main lext function"""
 
     # Get hash class
-    hashcls = get(method)
+    hashcls = new(method)
     # Forge new input data message
     d = pad(data, secret_length)
 
