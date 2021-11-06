@@ -5,7 +5,7 @@ SHA1, SHA256, SHA224, MD5
 **Note that the hash algorithms are not optimized in any way. These are simply implemented from pseudocode from Wikipedia.**
 
 Simple install
-
+```console
 git clone https://github.com/mumubebe/lext.git
 cd lext/
 ```
