@@ -2,8 +2,6 @@
 Length Extension Attack-tool<br>
 SHA1, SHA256, SHA224, MD5
 
-**Note that the hash algorithms are not optimized in any way. These are simply implemented from pseudocode from Wikipedia.**
-
 Simple install
 ```console
 git clone https://github.com/mumubebe/lext.git
@@ -61,6 +59,8 @@ optional arguments:
   --no-signature        Ignore output return of signature
   --no-outputdata       Ignore output return of new data message
 ```
+**Note that the implemented hash algorithms are not optimized in any way. These are simply implemented from pseudocode from Wikipedia.**
+
 
 Similar tools:<br>
 https://github.com/stephenbradshaw/hlextend<br>
