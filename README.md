@@ -1,10 +1,6 @@
 # lext
-Length Extension Attack-tool
+Simple install
 
-SHA1, SHA256, MD5
-
-
-```console
 git clone https://github.com/mumubebe/lext.git
 cd lext/
 ```
@@ -60,3 +56,7 @@ optional arguments:
   --no-signature        Ignore output return of signature
   --no-outputdata       Ignore output return of new data message
 ```
+
+Similar tools:<br>
+https://github.com/stephenbradshaw/hlextend<br>
+https://github.com/bwall/HashPump
