@@ -1,6 +1,6 @@
 # lext
 Length Extension Attack-tool<br>
-SHA1, SHA256, SHA224, MD5
+SHA1, SHA256, SHA224, SHA512, MD5
 
 Simple install
 ```console
@@ -39,14 +39,14 @@ b'count=10&lat=37.351&user_id=1&long=-119.827&waffle=eggo\x80\x00\x00\x00\x00\x0
 
 About
 ```console
-usage: __main__.py [-h] [-m {sha1,sha256,md5}] -d DATA -i INJECT -s SIGNATURE -l SECRET_LENGTH
+usage: __main__.py [-h] [-m {sha1,sha256,sha512,md5}] -d DATA -i INJECT -s SIGNATURE -l SECRET_LENGTH
                    [--no-signature] [--no-outputdata]
 
 Length Extension Attack-tool
 
 optional arguments:
   -h, --help            show this help message and exit
-  -m {sha1,sha256, md5}, --method {sha1,sha256, md5}
+  -m {sha1,sha256,sha512, md5}, --method {sha1,sha256,sha512, md5}
                         Hash method
   -d DATA, --data DATA  The original data known message from server. This data is prepend with a hidden secret
                         unknown to client.
