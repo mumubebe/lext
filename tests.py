@@ -1,18 +1,11 @@
 import unittest
-import lext
 from lext import lext, hashfuncs
+import hashlib
+import os
+from random import randint
 
 
 class TestSHA1(unittest.TestCase):
-    h = [
-        (b"", "da39a3ee5e6b4b0d3255bfef95601890afd80709"),
-        (b"a", "86f7e437faa5a7fce15d1ddcb9eaeaea377667b8"),
-        (
-            b"The quick brown fox jumps over the lazy dog",
-            "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12",
-        ),
-    ]
-
     def test_length_extension_attack(self):
         """Test SHA1 length extension attack"""
         inj, sig = lext(
@@ -30,61 +23,54 @@ class TestSHA1(unittest.TestCase):
         self.assertEqual(sig, "0e41270260895979317fff3898ab85668953aaa2")
 
     def test_hexdigest(self):
-        """Test SHA1 hexdigest"""
-        for data, hash in self.h:
+        """Test SHA1 hexdigest against hashlib as reference"""
+        for _ in range(10):
+            data = os.urandom(randint(0,9999))
+            ref = hashlib.sha1()
+            ref.update(data)
+            ref_sig = ref.hexdigest()
+
             with self.subTest(data=data):
-                self.assertEqual(hashfuncs.get("sha1").hexdigest(data), hash)
+                self.assertEqual(hashfuncs.get("sha1").hexdigest(data), ref_sig)
 
 
 class TestSHA256(unittest.TestCase):
-    h = [
-        (b"", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
-        (b"a", "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"),
-        (
-            b"The quick brown fox jumps over the lazy dog",
-            "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592",
-        ),
-    ]
-
     def test_hexdigest(self):
-        """Test SHA256 hexdigest"""
-        for data, hash in self.h:
+        """Test SHA256 hexdigest against hashlib as reference"""
+        for _ in range(10):
+            data = os.urandom(randint(0,9999))
+            ref = hashlib.sha256()
+            ref.update(data)
+            ref_sig = ref.hexdigest()
+
             with self.subTest(data=data):
-                self.assertEqual(hashfuncs.get("sha256").hexdigest(data), hash)
+                self.assertEqual(hashfuncs.get("sha256").hexdigest(data), ref_sig)
 
 
 class TestSHA224(unittest.TestCase):
-    h = [
-        (b"", "d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f"),
-        (b"a", "abd37534c7d9a2efb9465de931cd7055ffdb8879563ae98078d6d6d5"),
-        (
-            b"The quick brown fox jumps over the lazy dog",
-            "730e109bd7a8a32b1cb9d9a09aa2325d2430587ddbc0c38bad911525",
-        ),
-    ]
-
     def test_hexdigest(self):
-        """Test SHA224 hexdigest"""
-        for data, hash in self.h:
+        """Test SHA224 hexdigest against hashlib as reference"""
+        for _ in range(10):
+            data = os.urandom(randint(0,9999))
+            ref = hashlib.sha224()
+            ref.update(data)
+            ref_sig = ref.hexdigest()
+
             with self.subTest(data=data):
-                self.assertEqual(hashfuncs.get("sha224").hexdigest(data), hash)
+                self.assertEqual(hashfuncs.get("sha224").hexdigest(data), ref_sig)
 
 
 class TestMD5(unittest.TestCase):
-    h = [
-        (b"", "d41d8cd98f00b204e9800998ecf8427e"),
-        (b"a", "0cc175b9c0f1b6a831c399e269772661"),
-        (
-            b"The quick brown fox jumps over the lazy dog",
-            "9e107d9d372bb6826bd81d3542a419d6",
-        ),
-    ]
-
     def test_hexdigest(self):
-        """Test MD5 hexdigest"""
-        for data, hash in self.h:
+        """Test MD5 hexdigest against hashlib as reference"""
+        for _ in range(10):
+            data = os.urandom(randint(56,56))
+            ref = hashlib.md5()
+            ref.update(data)
+            ref_sig = ref.hexdigest()
+
             with self.subTest(data=data):
-                self.assertEqual(hashfuncs.get("md5").hexdigest(data), hash)
+                self.assertEqual(hashfuncs.get("md5").hexdigest(data), ref_sig)
 
 
 if __name__ == "__main__":

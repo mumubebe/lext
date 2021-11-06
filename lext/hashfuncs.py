@@ -11,22 +11,6 @@ def rotr(num, shift):
     """Rotate right"""
     return ((num >> shift) | (num << (32 - shift))) & 0xFFFFFFFF
 
-def pad2(msg):
-	msg_len_in_bits = (8*len(msg)) & 0xffffffffffffffff
-	msg.append(0x80)
-
-	while len(msg)%64 != 56:
-		msg.append(0)
-
-# STEP 2: append a 64-bit version of the length of the length of the original message
-# in the unlikely event that the length of the message is greater than 2^64,
-# only the lower order 64 bits of the length are used.
-
-# sys.byteorder -> 'little'
-	msg += msg_len_in_bits.to_bytes(8, byteorder='little') # little endian convention
-	# to_bytes(8...) will return the lower order 64 bits(8 bytes) of the length.
-	
-	return msg
 
 def pad(data, extra_length=0, byteorder="big"):
     """Pad message, with the ability to forge"""
@@ -80,7 +64,6 @@ class sha1(LengthExtender):
         data = pad(data, self._extra_length)
 
         blocks = [data[i * 64 : i * 64 + 64] for i in range(len(data) // 64)]
-
         for block in blocks:
             w = [struct.unpack(b">I", block[i * 4 : i * 4 + 4])[0] for i in range(16)]
 
@@ -118,10 +101,12 @@ class sha1(LengthExtender):
 
         return h[0] << 128 | h[1] << 96 | h[2] << 64 | h[3] << 32 | h[4]
 
-    def digest(self, data: bytes) -> str:
+    def digest(self, data: bytes) -> bytes:
+        """Digest and return bytes hash value"""
         return self._produce(data).to_bytes(20, byteorder="big")
 
-    def hexdigest(self, data: bytes) -> bytes:
+    def hexdigest(self, data: bytes) -> str:
+        """Digest and return hex hash value"""
         return self.digest(data).hex()
 
     def _reverse_hash(self, hsh):
@@ -196,10 +181,11 @@ class sha2(LengthExtender):
         return [h0, h1, h2, h3, h4, h5, h6, h7]
 
     def hexdigest(self, data: bytes) -> str:
+        """Digest and return hex hash value"""
         return self.digest(data).hex()
 
     def digest(self, data: bytes) -> bytes:
-        """Return SHA256-format"""
+        """Digest and return bytes hash value"""
         return b"".join(x.to_bytes(4, "big") for x in self._produce(data))
 
 
@@ -211,7 +197,7 @@ class sha224(sha2):
     _h = constants.SHA224_H
 
     def digest(self, data: bytes) -> bytes:
-        """Return SHA224-format
+        """Digest and return bytes hash value
         The return value is identical to SHA-256, except that the output is constructed by omitting h7
         """
         return b"".join(x.to_bytes(4, "big") for x in self._produce(data)[:-1])
@@ -237,6 +223,7 @@ class md5(LengthExtender):
         data = pad(data, self._extra_length, byteorder="little")
 
         blocks = [data[i * 64 : i * 64 + 64] for i in range(len(data) // 64)]
+
         for block in blocks:
             m = [struct.unpack(b"<I", block[i * 4 : i * 4 + 4])[0] for i in range(16)]
             a = a0
@@ -264,17 +251,19 @@ class md5(LengthExtender):
                 c = b
                 b = b + rotl(f, s[i])
 
-        return [
-            (a0 + a) & 0xFFFFFFFF,
-            (b0 + b) & 0xFFFFFFFF,
-            (c0 + c) & 0xFFFFFFFF,
-            (d0 + d) & 0xFFFFFFFF,
-        ]
+            a0 = (a0 + a) & 0xFFFFFFFF
+            b0 = (b0 + b) & 0xFFFFFFFF
+            c0 = (c0 + c) & 0xFFFFFFFF
+            d0 = (d0 + d) & 0xFFFFFFFF
+
+        return [a0, b0, c0, d0]
 
     def digest(self, data):
+        """Digest and return bytes hash value"""
         return b"".join(x.to_bytes(4, "little") for x in self._produce(data))
 
     def hexdigest(self, data):
+        """Digest and return hex hash value"""
         return self.digest(data).hex()
 
 
@@ -283,7 +272,7 @@ hashclasses = {"sha1": sha1, "sha256": sha256, "sha224": sha224, "md5": md5}
 
 def get(kls: str) -> object:
     kls = kls.lower()
-    """Return hash class"""
+    """Return hash object"""
     if kls in hashclasses:
         return hashclasses[kls]()
     else:
