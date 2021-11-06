@@ -80,6 +80,31 @@ class TestSHA256(unittest.TestCase):
                     get_hashlib_ref_sig(data, "sha256"),
                 )
 
+class TestSHA512(unittest.TestCase):
+    def test_length_extension_attack(self):
+        """Test SHA512 length extension attack (key length is known)"""
+        m = MAC("sha512")
+        inj, sig = lext(
+            data=m.message,
+            inject=b"&waffle=liege",
+            signature=m.sig,
+            secret_length=m.key_len,
+            method="sha512",
+        )
+
+        self.assertTrue(m.is_valid(inj, sig))
+
+    def test_hexdigest(self):
+        """Test SHA512 hexdigest against hashlib as reference"""
+        for _ in range(10):
+            data = os.urandom(randint(0, 9999))
+
+            with self.subTest(data=data):
+                self.assertEqual(
+                    hashfuncs.new("sha512").hexdigest(data),
+                    get_hashlib_ref_sig(data, "sha512"),
+                )
+
 
 class TestMD5(unittest.TestCase):
     def test_length_extension_attack(self):
@@ -95,7 +120,7 @@ class TestMD5(unittest.TestCase):
 
         self.assertTrue(m.is_valid(inj, sig))
 
-    def tes_hexdigest(self):
+    def test_hexdigest(self):
         """Test MD5 hexdigest against hashlib as reference"""
         for _ in range(10):
             data = os.urandom(randint(0, 9999))

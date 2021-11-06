@@ -12,6 +12,15 @@ def rotr(num, shift):
     return ((num >> shift) | (num << (32 - shift))) & 0xFFFFFFFF
 
 
+def rotl64(num, shift):
+    """Rotate left"""
+    return ((num << shift) | (num >> (64 - shift))) & 0xFFFFFFFFFFFFFFFF
+
+
+def rotr64(num, shift):
+    return ((num >> shift) | (num << (64 - shift))) & 0xFFFFFFFFFFFFFFFF
+
+
 def pad(data, extra_length=0, byteorder="big"):
     """Pad message, with the ability to forge"""
     ml = len(data) + extra_length
@@ -25,6 +34,22 @@ def pad(data, extra_length=0, byteorder="big"):
         + (0x80).to_bytes(1, byteorder=byteorder)
         + (0x00).to_bytes(padlen, byteorder=byteorder)
         + (ml_bits).to_bytes(8, byteorder=byteorder)
+    )
+
+
+def pad128(data, extra_length=0, byteorder="big"):
+    """Pad message, with the ability to forge"""
+    ml = len(data) + extra_length
+
+    padlen = (111 - ml) % 128
+
+    ml_bits = ml * 8
+
+    return (
+        data
+        + (0x80).to_bytes(1, byteorder=byteorder)
+        + (0x00).to_bytes(padlen, byteorder=byteorder)
+        + (ml_bits).to_bytes(16, byteorder=byteorder)
     )
 
 
@@ -323,7 +348,108 @@ class md5:
         return self.digest(data, **kwargs).hex()
 
 
-hashclasses = {"sha1": sha1, "sha256": sha256, "md5": md5}
+class sha512:
+    byteorder = "big"
+
+    def __init__(self):
+        self.k = constants.SHA512_K
+        self._h = constants.SHA512_H
+        self._extra_length = 0
+
+    def _produce(self, data, init_values=None, extra_length=0):
+        if init_values:
+            _h = self._reverse_hash(init_values)
+        else:
+            _h = init_values or self._h[:]
+
+        _k = self.k[:]
+        data = pad128(data, extra_length)
+
+        blocks = [data[i * 128 : i * 128 + 128] for i in range(len(data) // 128)]
+        for block in blocks:
+            w = [struct.unpack(b">Q", block[i * 8 : i * 8 + 8])[0] for i in range(16)]
+
+            for i in range(16, 80):
+                s0 = (rotr64(w[i - 15], 1)) ^ (rotr64(w[i - 15], 8)) ^ (w[i - 15] >> 7)
+                s1 = (rotr64(w[i - 2], 19)) ^ (rotr64(w[i - 2], 61)) ^ (w[i - 2] >> 6)
+                w.append((w[i - 16] + s0 + w[i - 7] + s1) & 0xFFFFFFFFFFFFFFFF)
+
+            a, b, c, d, e, f, g, h = _h
+
+            for i in range(80):
+                s1 = (rotr64(e, 14)) ^ (rotr64(e, 18)) ^ (rotr64(e, 41))
+                ch = (e & f) ^ (~e & g)
+                temp1 = (h + s1 + ch + _k[i] + w[i]) & 0xFFFFFFFFFFFFFFFF
+                s0 = (rotr64(a, 28)) ^ (rotr64(a, 34)) ^ (rotr64(a, 39))
+                maj = (a & b) ^ (a & c) ^ (b & c)
+                temp2 = (s0 + maj) & 0xFFFFFFFFFFFFFFFF
+
+                h = g
+                g = f
+                f = e
+                e = (d + temp1) & 0xFFFFFFFFFFFFFFFF
+                d = c
+                c = b
+                b = a
+                a = (temp1 + temp2) & 0xFFFFFFFFFFFFFFFF
+
+            _h[0] = (_h[0] + a) & 0xFFFFFFFFFFFFFFFF
+            _h[1] = (_h[1] + b) & 0xFFFFFFFFFFFFFFFF
+            _h[2] = (_h[2] + c) & 0xFFFFFFFFFFFFFFFF
+            _h[3] = (_h[3] + d) & 0xFFFFFFFFFFFFFFFF
+            _h[4] = (_h[4] + e) & 0xFFFFFFFFFFFFFFFF
+            _h[5] = (_h[5] + f) & 0xFFFFFFFFFFFFFFFF
+            _h[6] = (_h[6] + g) & 0xFFFFFFFFFFFFFFFF
+            _h[7] = (_h[7] + h) & 0xFFFFFFFFFFFFFFFF
+
+        return _h
+
+    def _reverse_hash(self, hsh):
+        hsh = int(hsh, 16)
+        h0 = (hsh >> 448) & 0xFFFFFFFFFFFFFFFF
+        h1 = (hsh >> 384) & 0xFFFFFFFFFFFFFFFF
+        h2 = (hsh >> 320) & 0xFFFFFFFFFFFFFFFF
+        h3 = (hsh >> 256) & 0xFFFFFFFFFFFFFFFF
+        h4 = (hsh >> 192) & 0xFFFFFFFFFFFFFFFF
+        h5 = (hsh >> 128) & 0xFFFFFFFFFFFFFFFF
+        h6 = (hsh >> 64) & 0xFFFFFFFFFFFFFFFF
+        h7 = hsh & 0xFFFFFFFFFFFFFFFF
+        return [h0, h1, h2, h3, h4, h5, h6, h7]
+
+    def hexdigest(self, data: bytes, **kwargs) -> str:
+        """Digest and return hex hash value. This methods calls digest()
+        Parameters:
+            data:
+                Bytes data to hash
+            **kwargs
+
+        Return:
+            hashed value in hex
+        """
+        return self.digest(data, **kwargs).hex()
+
+    def digest(
+        self, data: bytes, init_values: str = None, extra_length: int = 0
+    ) -> bytes:
+        """Digest and return hex hash value
+        Parameters:
+            data:
+                Bytes data to hash
+            init_values (optional):
+                Set starting values for hash method. In length extension attacks this value is
+                the known signature.
+            extra_length (optional):
+                append extra length to message. This length is appended to pad calculation.
+
+        Return:
+            hashed value in bytes
+        """
+        return b"".join(
+            x.to_bytes(8, "big") for x in self._produce(data, init_values, extra_length)
+        )
+
+
+hashclasses = {"sha1": sha1, "sha256": sha256, "md5": md5, "sha512": sha512}
 
 
 def new(kls: str) -> object:

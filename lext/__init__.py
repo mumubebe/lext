@@ -14,7 +14,8 @@ def lext(
     d = pad(data, secret_length, byteorder=hashcls.byteorder)
 
     # Setup and calculate a new signature
-    extra_length = math.ceil((len(data) + secret_length) / 64) * 64
+    b = 128 if method == 'sha512' else 64
+    extra_length = math.ceil((len(data) + secret_length) / b) * b
 
     return (
         (d + inject),
