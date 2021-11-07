@@ -1,6 +1,6 @@
 # lext
 Length Extension Attack-tool<br>
-SHA1, SHA256, SHA224, SHA512, MD5
+SHA1, SHA256, SHA512, MD5
 
 Simple install
 ```console
