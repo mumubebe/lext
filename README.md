@@ -59,7 +59,7 @@ optional arguments:
   --no-signature        Ignore output return of signature
   --no-outputdata       Ignore output return of new data message
 ```
-**Note that the implemented hash algorithms are not optimized in any way. These are simply implemented from pseudocode from Wikipedia.**
+**Note that the implemented hash algorithms are not optimized in any way.**
 
 
 Similar tools:<br>
