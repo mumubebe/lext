@@ -1,4 +1,4 @@
-from .hashfuncs import new, pad
+from .hashfuncs import new, pad, pad128
 import math
 
 
@@ -9,14 +9,14 @@ def lext(
 
     # Get hash class
     hashcls = new(method)
-
-    # Forge new input data message
-    d = pad(data, secret_length, byteorder=hashcls.byteorder)
-
-    # Setup and calculate a new signature
-    b = 128 if method == 'sha512' else 64
-    extra_length = math.ceil((len(data) + secret_length) / b) * b
-
+    
+    if method == "sha512":
+        d = pad128(data, secret_length, byteorder=hashcls.byteorder)
+        extra_length = math.ceil((len(data) + secret_length + 17) / 128) * 128
+    else:
+        d = pad(data, secret_length, byteorder=hashcls.byteorder)
+        extra_length = math.ceil((len(data) + secret_length + 9) / 64) * 64
+       
     return (
         (d + inject),
         hashcls.hexdigest(inject, init_values=signature, extra_length=extra_length),

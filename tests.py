@@ -10,7 +10,7 @@ class MAC:
 
     def __init__(self, method):
         self.method = method
-        self.key_len = randint(12, 64)
+        self.key_len = randint(0, 64)
         self.key = os.urandom(self.key_len)
         self.message = b"count=10&lat=37.351&user_id=1&long=-119.827&waffle=eggo"
         self.sig = self.gen_mac(self.message)
