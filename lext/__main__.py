@@ -1,4 +1,5 @@
 import argparse
+import base64
 from . import lext
 
 choices = ["sha1", "sha256", "sha512", "md5"]
@@ -50,9 +51,17 @@ parser.add_argument(
 
 parser.add_argument(
     "--no-outputdata",
-    dest="no_outputdata", 
+    dest="no_outputdata",
     action="store_true",
     help="Ignore output return of new data message",
+)
+
+parser.add_argument(
+    "--base64",
+    dest="base64_format",
+    action="store_true",
+    help="Format output as base64. Note that both signature and data will be converted\
+        (default for signature is hex string and byte string for data output)",
 )
 
 args = parser.parse_args()
@@ -66,6 +75,10 @@ data, sig = lext(
     secret_length=args.secret_length,
     method=args.method,
 )
+
+if args.base64_format:
+    data = base64.b64encode(data).decode()
+    sig = base64.b64encode(sig.encode()).decode()
 
 if not args.no_outputdata:
     print(data)

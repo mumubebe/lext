@@ -80,6 +80,7 @@ class TestSHA256(unittest.TestCase):
                     get_hashlib_ref_sig(data, "sha256"),
                 )
 
+
 class TestSHA512(unittest.TestCase):
     def test_length_extension_attack(self):
         """Test SHA512 length extension attack (key length is known)"""
