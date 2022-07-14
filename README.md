@@ -41,17 +41,16 @@ Note that output format for signature and data differs as default; signature as 
 
 About
 ```console
-usage: __main__.py [-h] [-m {sha1,sha256,sha512,md5}] -d DATA -i INJECT -s SIGNATURE -l SECRET_LENGTH
-                   [--no-signature] [--no-outputdata]
+usage: __main__.py [-h] [-m {sha1,sha256,sha512,md5}] -d DATA -i INJECT -s SIGNATURE -l SECRET_LENGTH [--no-signature] [--no-outputdata]
+                   [--base64]
 
 Length Extension Attack-tool
 
 optional arguments:
   -h, --help            show this help message and exit
-  -m {sha1,sha256,sha512, md5}, --method {sha1,sha256,sha512, md5}
+  -m {sha1,sha256,sha512,md5}, --method {sha1,sha256,sha512,md5}
                         Hash method
-  -d DATA, --data DATA  The original data known message from server. This data is prepend with a hidden secret
-                        unknown to client.
+  -d DATA, --data DATA  The original data known message from server. This data is prepend with a hidden secret unknown to client.
   -i INJECT, --inject INJECT
                         Additional message to append to the original data
   -s SIGNATURE, --signature SIGNATURE
@@ -60,6 +59,8 @@ optional arguments:
                         Length of the hidden secret that is hidden from client
   --no-signature        Ignore output return of signature
   --no-outputdata       Ignore output return of new data message
+  --base64              Format output as base64. Note that both signature and data will be converted (default for signature is hex string
+                        and byte string for data output)
 ```
 **Note that the implemented hash algorithms are not optimized in any way.**
 
