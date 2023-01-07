@@ -1,4 +1,4 @@
-# lext
+# 🐶️ lext
 Length Extension Attack-tool<br>
 SHA1, SHA256, SHA512, MD5
 
